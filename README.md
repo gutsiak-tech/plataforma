@@ -34,11 +34,21 @@ By integrating geospatial data with administrative labor datasets, this project 
 - Existing data:
   - **Bronze (option A, local geometry)**: Municipality shapefiles in `data-lake/bronze/geodata/municipios/uf=PR/ano=2024/` (`.shp`, `.shx`, `.dbf`, `.prj`)
   - **Bronze (option B, fallback)**: if `.shp` is missing, loader automatically downloads municipality boundaries from IBGE via `geobr`
-  - **Prata**: Cleaned mapped CSV in `data-lake/prata/` (e.g. `dados_mapeados.csv` with columns: `competenciamov`, `saldomovimentacao`, `uf`, `municipio`, …)
+  - **Prata**: Cleaned mapped CSV in `data-lake/prata/` (e.g. `dados_mapeados.csv` with columns: `competenciamov`, `saldomovimentacao`, `uf`, `municipio`, …). Required input data (not fully distributed inside this repository)
+
+## Data availability
+
+This repository does not include the full processed labor dataset (`dados_mapeados.csv`) used in the current MVP.
+
+To run the platform with real data, access to the treated dataset is required. Municipality shapefiles may be loaded from a local source or, if unavailable, retrieved automatically through the existing IBGE/geobr fallback.
+
+For technical evaluation purposes, the treated dataset and shapefiles used in this project can be shared separately by the author.
 
 ## Quick start
 
 > Official reproducible path: follow steps 1 -> 5 exactly in this order.
+
+> **Note:** full execution with real data requires access to the treated dataset (`dados_mapeados.csv`), which is not distributed inside this repository.
 
 ### 1. Environment
 
