@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/dist-ssr
+**/.venv
+**/__pycache__
+**/.pytest_cache
+.git
+.cursor
+*.log

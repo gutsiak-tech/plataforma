@@ -1,0 +1,66 @@
+# Tegola config for municipios map (MVT from materialized view)
+# Postgres connection via env vars
+
+[webserver]
+port = ":8080"
+hostname = "localhost"
+cors_allowed_origins = ["*"]
+
+[[providers]]
+name = "plataforma_postgis"
+type = "mvt_postgis"
+uri = "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable"
+srid = 3857
+
+  [[providers.layers]]
+  name = "caged_saldo"
+  geometry_fieldname = "geom"
+  id_fieldname = "gid"
+  geometry_type = "polygon"
+  srid = 3857
+  sql = """
+    SELECT
+      m.gid,
+      m.municipio_display,
+      m.saldo_sum,
+      m.uf,
+      m.competenciamov,
+      ST_AsMVTGeom(
+        parts.geom_part,
+        !BBOX!,
+        4096,
+        256,
+        true
+      ) AS geom
+    FROM internal.mv_current_caged_layer m
+    CROSS JOIN LATERAL (
+      SELECT
+        CASE
+          WHEN ST_SRID(m.geom) = 3857 THEN m.geom
+          ELSE ST_Transform(m.geom, 3857)
+        END AS base_geom_3857
+    ) base
+    CROSS JOIN LATERAL (
+      SELECT
+        CASE
+          WHEN !ZOOM! <= 5 THEN ST_SimplifyPreserveTopology(base.base_geom_3857, 5000)
+          WHEN !ZOOM! <= 7 THEN ST_SimplifyPreserveTopology(base.base_geom_3857, 1500)
+          WHEN !ZOOM! <= 9 THEN ST_SimplifyPreserveTopology(base.base_geom_3857, 400)
+          ELSE base.base_geom_3857
+        END AS geom_simplified
+    ) simp
+    CROSS JOIN LATERAL ST_Subdivide(simp.geom_simplified, 2048) AS parts(geom_part)
+    WHERE base.base_geom_3857 && !BBOX!
+      AND ST_Intersects(parts.geom_part, !BBOX!)
+  """
+
+[[maps]]
+name = "municipios"
+attribution = "Plataforma Geospatial MVP"
+center = [-51.5, -25.0, 7.0]
+bounds = [-54.0, -27.0, -48.0, -22.0]
+
+  [[maps.layers]]
+  provider_layer = "plataforma_postgis.caged_saldo"
+  min_zoom = 0
+  max_zoom = 14

@@ -1,0 +1,73 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-plataforma}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-plataforma}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  core-api:
+    build:
+      context: ..
+      dockerfile: services/core-api/Dockerfile
+    environment:
+      # Must use service name so core-api connects to PostGIS inside Docker network (not localhost)
+      POSTGRES_HOST: postgis
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-plataforma}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PATH_SHAPE_MUNICIPIOS: ${PATH_SHAPE_MUNICIPIOS:-/workspace/data-lake/bronze/geodata/municipios/uf=PR/ano=2024}
+      PATH_MAPPED_CSV: ${PATH_MAPPED_CSV:-/workspace/data-lake/prata/dados_mapeados.csv}
+      DEFAULT_UF: ${DEFAULT_UF:-PR}
+      MIGRATIONS_DIR: /workspace/database/migrations
+    volumes:
+      - ..:/workspace
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgis:
+        condition: service_healthy
+
+  tegola:
+    image: gospatial/tegola:latest
+    environment:
+      POSTGRES_HOST: postgis
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-plataforma}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ../services/tileserver/config.toml:/etc/tegola/config.toml:ro
+    ports:
+      - "8080:8080"
+    command: ["serve", "--config", "/etc/tegola/config.toml"]
+    depends_on:
+      postgis:
+        condition: service_healthy
+
+  web-frontend:
+    build:
+      context: ..
+      dockerfile: services/web-frontend/Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      # Primary frontend API variable (VITE_API_URL is still supported in code as legacy fallback).
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_API_URL: http://localhost:8000
+      VITE_TILES_URL: http://localhost:8080
+    depends_on:
+      - core-api
+
+volumes:
+  postgres_data:

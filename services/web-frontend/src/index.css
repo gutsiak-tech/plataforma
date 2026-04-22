@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --dashboard-bg: #f3f4f6;
+  --dashboard-card: #ffffff;
+  --dashboard-text: #0f172a;
+  --dashboard-muted: #64748b;
+  --dashboard-border: rgba(15, 23, 42, 0.08);
+  --dashboard-primary: #2563eb;
+  --dashboard-radius-card: 16px;
+  --dashboard-radius-input: 12px;
+  --bg: 222 47% 7%;
+  --panel: 221 39% 11%;
+  --text: 210 40% 98%;
+  --muted: 215 20% 65%;
+  --primary: 197 92% 52%;
+  --border: 217 19% 27%;
+  --ring: 199 89% 48%;
+  --danger: 0 72% 50%;
+  --radius: 0.75rem;
+}
+
+* {
+  @apply border-border;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  @apply bg-bg text-text antialiased;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-weight: 400;
+}
+
+h1 {
+  font-weight: 700;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+}
+
+button,
+input,
+textarea,
+select,
+table,
+th,
+td,
+nav,
+[role="dialog"],
+[role="menu"],
+[role="listbox"],
+.echarts-for-react {
+  font-family: var(--font-sans);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
+}
